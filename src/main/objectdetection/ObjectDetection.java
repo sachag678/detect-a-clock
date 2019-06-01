@@ -8,11 +8,13 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.video.BackgroundSubtractor;
 
 public class ObjectDetection {
 	
@@ -122,6 +124,65 @@ public class ObjectDetection {
         }
 	}
 	
+	public static String predict(Mat result) {
+		return "1";
+	}
+	
+	public static boolean detectNumber(String filename, String filename2, int expected) {
+		
+		Mat src1 = Imgcodecs.imread(filename, Imgcodecs.IMREAD_GRAYSCALE);
+		Mat src2 = Imgcodecs.imread(filename2, Imgcodecs.IMREAD_GRAYSCALE);
+		
+		Mat dst = new Mat();
+		Core.absdiff(src1, src2, dst);
+		
+		Mat result = new Mat();
+		Imgproc.adaptiveThreshold(dst, result, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 3, 0);
+		
+		//HighGui.imshow("threshold", result);
+		//HighGui.waitKey();
+		MatOfPoint2f approxCurve = new MatOfPoint2f();
+        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        
+       // System.out.println("Done converting image..");
+
+        Imgproc.findContours(result, contours, new Mat(), Imgproc.RETR_EXTERNAL,
+                Imgproc.CHAIN_APPROX_SIMPLE);
+        
+        List<Mat> digits = new ArrayList<>();
+        
+        for (int i = 0; i < contours.size(); i++) {
+
+            //Convert contours(i) from MatOfPoint to MatOfPoint2f
+            MatOfPoint2f contour2f = new MatOfPoint2f( contours.get(i).toArray() );
+
+            //Processing on mMOP2f1 which is in type MatOfPoint2f
+            double approxDistance = Imgproc.arcLength(contour2f, true)*0.02;
+            Imgproc.approxPolyDP(contour2f, approxCurve, approxDistance, true);
+
+            //Convert back to MatOfPoint
+            MatOfPoint points = new MatOfPoint( approxCurve.toArray() );
+
+            // Get bounding rect of contour
+            org.opencv.core.Rect rect = Imgproc.boundingRect(points);
+            
+            digits.add(new Mat(result, rect));
+            
+            Imgproc.rectangle(dst, rect.tl(), rect.br(), new Scalar(255, 255, 255), 1);
+        }
+        String res = "";
+        for(int i=0;i<digits.size();i++) {
+			res+=ObjectDetection.predict(digits.get(i));
+        }
+        return res.equals(String.valueOf(expected));
+        
+        //convert items in the digits into bitmaps to be passed into the network
+        
+       //HighGui.imshow("hi", dst);
+        //HighGui.waitKey();
+		
+	}
+	
 	public static void main(String [] args) {
         // Load the native library.
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -136,5 +197,8 @@ public class ObjectDetection {
         assert !ObjectDetection.detectCircleUsingContours("img/Square.png");
         assert !ObjectDetection.detectCircleUsingContours("img/Triangle.png");
         assert !ObjectDetection.detectCircleUsingContours("img/TallEllipse.png");
+        assert ObjectDetection.detectCircleUsingContours("img/GoodClock/circle-GoodClock.png");
+        
+        assert detectNumber("img/GoodClock/circle-GoodClock.png", "img/GoodClock/GoodClock-0B.png", 111);
 	}
 }
