@@ -93,8 +93,8 @@ public class ObjectDetection {
 				//System.out.println(Arrays.toString(point));
         }
         
-        double [] center_point = new double [] {(xMax-xMin)/2, (yMax-yMin)/2};
-       // System.out.println(xMax +" "+ xMin+ " "+ yMax+ " "+ yMin);
+        double [] center_point = new double [] {(xMin)+(xMax-xMin)/2, yMin+(yMax-yMin)/2};
+        //System.out.println(xMax +" "+ xMin+ " "+ yMax+ " "+ yMin);
         //System.out.println(Arrays.toString(center_point));
         
         double maxR = 0;
@@ -106,7 +106,7 @@ public class ObjectDetection {
 			if(maxR<radius) {maxR = radius;}
 			if(minR>radius) {minR = radius;}
         }
-        //System.out.println(maxR +" " +minR);
+       // System.out.println(maxR +" " +minR);
         	
         for (int i = 0; i < contours.size(); i++) {
             Imgproc.drawContours(contourImg, contours, i, new Scalar(255, 255, 255), 1);
@@ -116,8 +116,7 @@ public class ObjectDetection {
         //HighGui.waitKey();
         
         int tol = 39;
-        
-        if(maxR<center_point[0]+center_point[0]*tol/100 && minR>center_point[0]-center_point[0]*tol/100) {
+        if(maxR<(center_point[0]-xMin)+(center_point[0]-xMin)*tol/100 && minR>center_point[0]-xMin-(center_point[0]-xMin)*tol/100) {
         	return true;
         }else {
         	return false;
@@ -188,16 +187,17 @@ public class ObjectDetection {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         
         assert ObjectDetection.detectCircleUsingContours("img/clock1.png");
-        assert !ObjectDetection.detectCircleUsingContours("img/clock2.png");
         assert !ObjectDetection.detectCircleUsingContours("img/Bumpy.png");
         assert !ObjectDetection.detectCircleUsingContours("img/AngledEllipse.png");
         assert ObjectDetection.detectCircleUsingContours("img/GoodCircle1.png");
-        assert ObjectDetection.detectCircleUsingContours("img/GoodCircle2.png");
+        assert !ObjectDetection.detectCircleUsingContours("img/GoodCircle2.png");
         assert !ObjectDetection.detectCircleUsingContours("img/Hat.png");
         assert !ObjectDetection.detectCircleUsingContours("img/Square.png");
         assert !ObjectDetection.detectCircleUsingContours("img/Triangle.png");
         assert !ObjectDetection.detectCircleUsingContours("img/TallEllipse.png");
         assert ObjectDetection.detectCircleUsingContours("img/GoodClock/circle-GoodClock.png");
+        assert ObjectDetection.detectCircleUsingContours("img/image.png");
+        assert ObjectDetection.detectCircleUsingContours("img/image2.png");
         
         assert detectNumber("img/GoodClock/circle-GoodClock.png", "img/GoodClock/GoodClock-0B.png", 111);
 	}
